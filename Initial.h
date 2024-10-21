@@ -13,22 +13,25 @@
 	102~103	int			SystemStopDelay		시스템 정지 지연
 
 	104~105	int			StartAlarmDelay		시작 알람 지연
-	106~107	int			RunAlarmDelay			운전 알람 지연 
+	106~107	int			RunAlarmDelay		운전 알람 지연 
 
-	108~109	int			OilWarningTemp			윤활유 경고 온도
-	110~111	int			OilAlarmTemp			윤활유 알람 온도
+	108~109	int			OilWarningTemp		윤활유 경고 온도
+	110~111	int			OilAlarmTemp		윤활유 알람 온도
 
-	112~113	int			HeatRunTemp			히터 운전 온도
-	114~115	int			HeatStopTemp			히터 정지 온도
+	112~113	int			HeatRunTemp		히터 운전 온도
+	114~115	int			HeatStopTemp		히터 정지 온도
 
-	116~117	int			FanRunTemp			팬 운전 온도
-	118~119	int			FanStopTemp			팬 정지 온도
-	120~121	int			OffsetTP				온도 오프셋
+	116~117	int			FanRunTemp		팬 운전 온도
+	118~119	int			FanStopTemp		팬 정지 온도
+	120~121	int			OffsetTP		온도 오프셋
 
-	122~123	int			LowPR				이상저압
-	124~125	int			HighPR				이상고압
-	126~127	int			SetPR				설정압력
-	128~129	int			OffsetPR				압력 오프셋
+	122~123	int			LowPR			이상저압
+	124~125	int			HighPR			이상고압
+	126~127	int			SetPR			설정압력
+	128~129	int			OffsetPR		압력 오프셋
+
+ 	130~131 int			ComAddr			통신주소
+  	132~133 int			IndBaud			통신속도
 
 */
 
