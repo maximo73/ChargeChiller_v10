@@ -29,6 +29,8 @@ __flash unsigned int  MaskW[16] = { 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x00
 __flash unsigned char MaskB[8]  = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 
 __flash int CompDelay[6] = {30, 60, 90, 120, 150, 180};
+
+__flash unsigned int Baudrate[9] = {207, 103, 68, 51, 34, 25, 16, 12, 8}; 
 //==============================================
 #define _BV(bit) 		(1 << (bit))
 #define cbi(sfr, bit)	(sfr) &= ~_BV(bit)
@@ -226,6 +228,22 @@ void main( void )
 	OCR3B = 0;		// Motor Speed 2 PWM Output
 			
 	TIMSK = 0x12;		// Timer/Counter 1, 0 Output Compare A 
+	
+	// -------------------------------------------------------------------------------------------
+	// UART initialize for communication with Monitoring
+	// -------------------------------------------------------------------------------------------
+	// COMM2 Init		// for the communication with HMI
+	UBRR1L = Baudrate[3];   // 0:4800bps, 1:9600bps, 2:14,4kbps, 3:19.2kbps, 4:28.8kbps
+				// 5:38.4kbps, 6:57.6kbps, 7:76.8kbps, 8:115.2kbps	
+	UCSR1A = 0x00;
+	UCSR1B = 0x98;		// RX Complete Interrupt Enable, RX Enable, TX Enable
+	UCSR1C = 0x06;   	// none-parity, 1-stop, 8-Bit
+	
+	i = 0;
+	i = UDR1;		// dummy read
+	i++;
+	
+	CommInit(0);		// Communication Init
 	
 	// -------------------------------------------------------------------------------------------
 	// ADC initialize
