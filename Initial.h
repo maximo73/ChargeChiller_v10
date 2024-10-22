@@ -13,25 +13,28 @@
 	102~103	int			SystemStopDelay		시스템 정지 지연
 
 	104~105	int			StartAlarmDelay		시작 알람 지연
-	106~107	int			RunAlarmDelay		운전 알람 지연 
+	106~107	int			RunAlarmDelay			운전 알람 지연 
 
-	108~109	int			OilWarningTemp		윤활유 경고 온도
-	110~111	int			OilAlarmTemp		윤활유 알람 온도
+	108~109	int			OilWarningTemp			윤활유 경고 온도
+	110~111	int			OilAlarmTemp			윤활유 알람 온도
 
-	112~113	int			HeatRunTemp		히터 운전 온도
-	114~115	int			HeatStopTemp		히터 정지 온도
+	112~113	int			HeatRunTemp			히터 운전 온도
+	114~115	int			HeatStopTemp			히터 정지 온도
 
-	116~117	int			FanRunTemp		팬 운전 온도
-	118~119	int			FanStopTemp		팬 정지 온도
-	120~121	int			OffsetTP		온도 오프셋
+	116~117	int			FanRunTemp			팬 운전 온도
+	118~119	int			FanStopTemp			팬 정지 온도
 
-	122~123	int			LowPR			이상저압
-	124~125	int			HighPR			이상고압
-	126~127	int			SetPR			설정압력
-	128~129	int			OffsetPR		압력 오프셋
+	120~121	int			OffsetTP				온도 오프셋
 
- 	130~131 int			ComAddr			통신주소
-  	132~133 int			IndBaud			통신속도
+	122~123	int			LowPR				이상저압
+	124~125	int			HighPR				이상고압
+	126~127	int			SetPR				설정압력
+	128~129	int			OffsetPR				압력 오프셋
+	
+	130		int			SensorMode			압력센서 선택
+
+	132		int			ComAddr				통신주소
+	134		int			IndBaud				통신속도 인덱스
 
 */
 
@@ -185,11 +188,12 @@ unsigned char	PumpMode;				// Pump Control Mode
 		int	OilWarningTemp;		// Oil temperature for warning
 		int	OilAlarmTemp;			// Oil temperature for alarm
 		
-		int	HeatRunTemp;			// Heater Run Temperature
-		int	HeatStopTemp;			// Heater Stop Temperature
+//		int	HeatRunTemp;			// Heater Run Temperature
+//		int	HeatStopTemp;			// Heater Stop Temperature
 		
 		int	FanRunTemp;			// Fan Run Temperature
 		int	FanStopTemp;			// Fan Stop Temperature
+          
 		int	OffsetTP;				// Temperature Offset
 		
 		int	LowPR;				// Lowest Pressure
@@ -197,7 +201,10 @@ unsigned char	PumpMode;				// Pump Control Mode
 		int	SetPR;				// Setpoint Pressure
 		int	OffsetPR;				// Pressure Offset
 		
-		int SensorMode;			// Pressure Sensor
+		int	SensorMode;			// Pressure Sensor
+		
+		int	ComAddr;				// Communication Address
+		int	IndBaud;				// Communication Baudrate
 		
 //########### Global Variable #############
 unsigned  char Ctrl; 			// Control Command
@@ -216,6 +223,7 @@ unsigned  char NowERROR, PreERROR;	// NowERROR: Current Error, PreERROR: Error b
 		char CNT_WarningTP, CNT_AlarmTP;		// Temperature Warning & Alarm Count
 		char CNT_LowPR, CNT_HighPR;			// Pressure Lowest & Highest Count
 		char CNT_WarningLV, CNT_AlarmLV;		// Level Warning & Alarm Count
+		char CNT_PumpFault;					// Pump Fault Check Count
 		
 		// PID Control
 		float KP, KI, KD;
@@ -264,6 +272,18 @@ unsigned 	char TimeSchFlag;				// 기본 타스크주기를 위한 플래그 레
 //########### Variable for Display Function #############	
 		int  Error_index;				// index for error display
 
+////#########  Variable for Display Communication ###########
+unsigned int InReg[5];		// Address 0x0000(0) ~ 0x0005(5)
+unsigned int HoReg[17];		// Address 0x000A(10)~ 0x001A(26)
+unsigned char TX_BUFF[20], RX_BUFF[20];
+	    char Flag_Query;
+	    char Count_Query;
+	    char Count_NumByte;
+	    char Flag_EndQuery;
+	    char NumByte;
+	    char Flag_ModBusTX;
+	    int  Index_ModBusTX;
+	    
 //########### ADC Function #############	    
 void TASK_temperature(void)  					// Temperature Processing
 {
@@ -367,6 +387,7 @@ void TASK_temperature(void)  					// Temperature Processing
 	if(fdata >  99.) fdata =  99.;
 
 	NowTP = (int)fdata;
+	InReg[4] = (unsigned int)NowTP;
 } 
 	    
 void TASK_pressure(void)  					// Pressure Processing
@@ -400,6 +421,7 @@ void TASK_pressure(void)  					// Pressure Processing
 	}
 	
 	NowPR = (int)(fdata * 10.);
+	InReg[3] = (unsigned int)NowPR;
 } 
 //########### EEPROM Initialize #############
 void EEPROM_Init(void)
@@ -432,14 +454,14 @@ void EEPROM_Init(void)
      EE_PUT(110,(unsigned char)OilAlarmTemp);				  
      EE_PUT(111,(unsigned char)(OilAlarmTemp>>8));	
 		
-	HeatRunTemp = 0;			// Heater Run Temperature = 0 'C
-     EE_PUT(112,(unsigned char)HeatRunTemp);				  
-     EE_PUT(113,(unsigned char)(HeatRunTemp>>8));	
-	
-	HeatStopTemp = 10;			// Heater Stop Temperature = 10 'C
-     EE_PUT(114,(unsigned char)HeatStopTemp);				  
-     EE_PUT(115,(unsigned char)(HeatStopTemp>>8));	
-		
+//	HeatRunTemp = 0;			// Heater Run Temperature = 0 'C
+//     EE_PUT(112,(unsigned char)HeatRunTemp);				  
+//     EE_PUT(113,(unsigned char)(HeatRunTemp>>8));	
+//	
+//	HeatStopTemp = 10;			// Heater Stop Temperature = 10 'C
+//     EE_PUT(114,(unsigned char)HeatStopTemp);				  
+//     EE_PUT(115,(unsigned char)(HeatStopTemp>>8));	
+//		
 	FanRunTemp = 20;			// Fan Run Temperature = 20 'C
      EE_PUT(116,(unsigned char)FanRunTemp);				  
      EE_PUT(117,(unsigned char)(FanRunTemp>>8));
@@ -469,6 +491,12 @@ void EEPROM_Init(void)
 	SensorMode = 16;			// SensorMode = 16bar
 	EE_PUT(130,(unsigned char)SensorMode);
 	
+	ComAddr = 1;				// Communication address = 1
+	EE_PUT(132,(unsigned char)ComAddr); 
+	
+	IndBaud = 3;				// Communication baudrate = 3[19.2kbps]
+	EE_PUT(134,(unsigned char)IndBaud); 
+	
 }
 
 //########### Variable Initialize #############
@@ -476,25 +504,50 @@ void VARIABLE_Init(void)
 {
 	int i;
 	
-	PumpMode			= EE_GET(50);												// Pump Control Mode
+	for(i=0;i<5;i++) InReg[i] = 0;
+	for(i=0;i<17;i++) HoReg[i] = 0;
 	
 	SystemRunDelay 	= ((unsigned int)EE_GET(101)<<8) + (unsigned int)EE_GET(100);		// System Run Delay = 1 sec	
+	HoReg[0]			= (unsigned int)SystemRunDelay;
 	SystemStopDelay 	= ((unsigned int)EE_GET(103)<<8) + (unsigned int)EE_GET(102);		// System Stop Delay = 1 sec
+	HoReg[1]			= (unsigned int)SystemStopDelay;
 	StartAlarmDelay 	= ((unsigned int)EE_GET(105)<<8) + (unsigned int)EE_GET(104);		// Delay for Warning & Alarm after Power ON = 10 sec
+	HoReg[2]			= (unsigned int)StartAlarmDelay;
 	RunAlarmDelay 		= ((unsigned int)EE_GET(107)<<8) + (unsigned int)EE_GET(106);		// Delay for Warning & Alarm in Running = 2 sec
+	HoReg[3]			= (unsigned int)RunAlarmDelay;	
 	OilWarningTemp 	= ((unsigned int)EE_GET(109)<<8) + (unsigned int)EE_GET(108);		// Oil temperature for warning = 85 'C
-	OilAlarmTemp 		= ((unsigned int)EE_GET(111)<<8) + (unsigned int)EE_GET(110);		// Oil temperature for alarm = 95 'C
-	HeatRunTemp 		= ((unsigned int)EE_GET(113)<<8) + (unsigned int)EE_GET(112);		// Heater Run Temperature = 0 'C
-	HeatStopTemp 		= ((unsigned int)EE_GET(115)<<8) + (unsigned int)EE_GET(114);		// Heater Stop Temperature = 10 'C
-	FanRunTemp 		= ((unsigned int)EE_GET(117)<<8) + (unsigned int)EE_GET(116);		// Fan Run Temperature = 20 'C
-	FanStopTemp 		= ((unsigned int)EE_GET(119)<<8) + (unsigned int)EE_GET(118);		// Fan Stop Temperature = 15 'C
-	OffsetTP	 		= (unsigned int)EE_GET(120);									// Temperature Offset = 0 'C 
-	LowPR 			= ((unsigned int)EE_GET(123)<<8) + (unsigned int)EE_GET(122);		// Lowest Pressure = 3.0 bar
-	HighPR 			= ((unsigned int)EE_GET(125)<<8) + (unsigned int)EE_GET(124);		// Highest pressure = 7.0 bar
-	SetPR 			= ((unsigned int)EE_GET(127)<<8) + (unsigned int)EE_GET(126);		// Setpoint Pressure = 5.0 bar
-	OffsetPR 			= (unsigned int)EE_GET(128);									// Pressure Offset = 0.0 bar	
-	SensorMode 		= (unsigned int)EE_GET(130);									// SensorMode = 10bar
+	HoReg[4]			= (unsigned int)OilWarningTemp;
 	
+	OilAlarmTemp 		= ((unsigned int)EE_GET(111)<<8) + (unsigned int)EE_GET(110);		// Oil temperature for alarm = 95 'C
+	HoReg[5]			= (unsigned int)OilAlarmTemp;
+//	HeatRunTemp 		= ((unsigned int)EE_GET(113)<<8) + (unsigned int)EE_GET(112);		// Heater Run Temperature = 0 'C
+//	HeatStopTemp 		= ((unsigned int)EE_GET(115)<<8) + (unsigned int)EE_GET(114);		// Heater Stop Temperature = 10 'C
+	FanRunTemp 		= ((unsigned int)EE_GET(117)<<8) + (unsigned int)EE_GET(116);		// Fan Run Temperature = 20 'C
+	HoReg[6]			= (unsigned int)FanRunTemp;
+	FanStopTemp 		= ((unsigned int)EE_GET(119)<<8) + (unsigned int)EE_GET(118);		// Fan Stop Temperature = 15 'C
+	HoReg[7]			= (unsigned int)FanStopTemp;
+	OffsetTP	 		= (unsigned int)EE_GET(120);									// Temperature Offset = 0 'C 
+	HoReg[8]			= (unsigned int)OffsetTP;
+	LowPR 			= ((unsigned int)EE_GET(123)<<8) + (unsigned int)EE_GET(122);		// Lowest Pressure = 3.0 bar
+	HoReg[9]			= (unsigned int)LowPR;
+	HighPR 			= ((unsigned int)EE_GET(125)<<8) + (unsigned int)EE_GET(124);		// Highest pressure = 7.0 bar
+	HoReg[10]			= (unsigned int)HighPR;
+	SetPR 			= ((unsigned int)EE_GET(127)<<8) + (unsigned int)EE_GET(126);		// Setpoint Pressure = 5.0 bar
+	HoReg[11]			= (unsigned int)SetPR;
+	
+	OffsetPR 			= (unsigned int)EE_GET(128);									// Pressure Offset = 0.0 bar	
+	HoReg[12]			= (unsigned int)OffsetPR;
+	PumpMode			= EE_GET(50);												// Pump Control Mode	
+	HoReg[13]			= (unsigned int)PumpMode;
+	SensorMode 		= (unsigned int)EE_GET(130);									// SensorMode = 16bar
+	HoReg[14]			= (unsigned int)SensorMode;
+	ComAddr			= (unsigned int)EE_GET(132);									// Communication address = 1	
+	HoReg[15]			= (unsigned int)ComAddr;
+	IndBaud			= (unsigned int)EE_GET(134);									// Communication baudrate = 3[19.2kbps]
+	HoReg[16]			= (unsigned int)IndBaud;
+	UBRR1L 			= Baudrate[IndBaud];	// 0:4800bps, 1:9600bps, 2:14,4kbps, 3:19.2kbps, 4:28.8kbps
+										// 5:38.4kbps, 6:57.6kbps, 7:76.8kbps, 8:115.2kbps	
+		
 	//######### Variables related to Remote Control Signal ###########	
 	Ctrl = 0x00;
 	
@@ -524,6 +577,7 @@ void VARIABLE_Init(void)
 	CNT_HighPR = 0;		// Pressure Highest Count
 	CNT_WarningLV = 0;		// Level Warning Count
 	CNT_AlarmLV = 0;		// Level Warning Count
+	CNT_PumpFault = 0;		// Pump Fault Check Count 
 	
 	CNT_PrErr = 0;			// Pressure Error check delay
 		
@@ -562,4 +616,15 @@ void VARIABLE_Init(void)
 	//########### Variable for Control Function #############	 
 	Error_index = 0;
 	
+	Flag_Query = CLR;
+	Count_Query = 0;
+	Count_NumByte = 0;
+	Flag_EndQuery = CLR;
+	NumByte = 0;
+	Flag_ModBusTX = CLR;
+	Index_ModBusTX = 0;
+	for(i=0;i<20;i++){
+		TX_BUFF[i] = 0x00;
+		RX_BUFF[i] = 0x00;
+	}
 }
