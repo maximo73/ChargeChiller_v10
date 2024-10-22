@@ -9,6 +9,15 @@
 #include <iom64a.h> 
 #include <stdio.h>
 
+typedef unsigned char  BOOLEAN;
+typedef unsigned char  INT8U;                    /* Unsigned  8 bit quantity                            */
+typedef signed   char  INT8S;                    /* Signed    8 bit quantity                            */
+typedef unsigned int   INT16U;                   /* Unsigned 16 bit quantity                            */
+typedef signed   int   INT16S;                   /* Signed   16 bit quantity                            */
+typedef unsigned long  INT32U;                   /* Unsigned 32 bit quantity                            */
+typedef signed   long  INT32S;                   /* Signed   32 bit quantity                            */
+typedef float          FP32;                     /* Single precision floating point                     */
+
 #define TRUE	1
 #define FALSE	0
 
@@ -28,9 +37,8 @@ __flash unsigned int  MaskW[16] = { 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x00
                                     0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000 };
 __flash unsigned char MaskB[8]  = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 
-__flash int CompDelay[6] = {30, 60, 90, 120, 150, 180};
-
 __flash unsigned int Baudrate[9] = {207, 103, 68, 51, 34, 25, 16, 12, 8}; 
+
 //==============================================
 #define _BV(bit) 		(1 << (bit))
 #define cbi(sfr, bit)	(sfr) &= ~_BV(bit)
@@ -120,9 +128,10 @@ int ad_conversion(char ch)   		// Single Ended Input A/D Conversion
      return(ADC);
 }
 
-char boggle = 1;
-
+#include "COMBGND.H"
+#include "COMBGND.C"
 #include "Initial.h"
+#include "EXTCOM.h"
 #include "Display.h"
 #include "Control.h"
 
@@ -179,10 +188,10 @@ void main( void )
 				// PortD.1(1) : Non Connection <-- FND 1 Selection
 				// PortD.2(0) : RXD for RS485 MODBUS RTU <-- FND 2 Selection
 				// PortD.3(1) : TXD for RS485 MODBUS RTU <-- FND 3 Selection
-				// PortD.4(1) : LED 0 for Run
-				// PortD.5(1) : LED 1 for Warning
-				// PortD.6(1) : LED 2 for Alarm
-				// PortD.7(1) : LED 3 for Reserved
+				// PortD.4(1) : LED 0 for System OFF/ON Status
+				// PortD.5(1) : LED 1 for Pump Stop/Run Status
+				// PortD.6(1) : LED 2 for Alarm & Warning Status
+				// PortD.7(1) : LED 3 for FAN Stop/Run Status
 	
 	DDRE  = 0xFE;	// SPI Download & PWM Output
 	PORTE = 0x00;	// PortE.0(0) : MOSI - Data Input
@@ -233,8 +242,8 @@ void main( void )
 	// UART initialize for communication with Monitoring
 	// -------------------------------------------------------------------------------------------
 	// COMM2 Init		// for the communication with HMI
-	UBRR1L = Baudrate[3];   // 0:4800bps, 1:9600bps, 2:14,4kbps, 3:19.2kbps, 4:28.8kbps
-				// 5:38.4kbps, 6:57.6kbps, 7:76.8kbps, 8:115.2kbps	
+	UBRR1L = Baudrate[3];	// 0:4800bps, 1:9600bps, 2:14,4kbps, 3:19.2kbps, 4:28.8kbps
+						// 5:38.4kbps, 6:57.6kbps, 7:76.8kbps, 8:115.2kbps	
 	UCSR1A = 0x00;
 	UCSR1B = 0x98;		// RX Complete Interrupt Enable, RX Enable, TX Enable
 	UCSR1C = 0x06;   	// none-parity, 1-stop, 8-Bit
@@ -243,7 +252,7 @@ void main( void )
 	i = UDR1;		// dummy read
 	i++;
 	
-	CommInit(0);		// Communication Init
+	CommInit();		// Communication Init
 	
 	// -------------------------------------------------------------------------------------------
 	// ADC initialize
