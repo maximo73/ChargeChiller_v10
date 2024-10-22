@@ -57,7 +57,7 @@
 
 INT8U    CommGetChar(INT8U *err);
 INT8U    CommGetTxChar(INT8U *err);
-void     CommInit(char flag_reset);
+void     CommInit();
 BOOLEAN  CommIsEmpty();
 BOOLEAN  CommIsFull();
 INT8U    CommPutChar(INT8U c);
