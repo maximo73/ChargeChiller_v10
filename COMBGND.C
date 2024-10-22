@@ -133,7 +133,7 @@ INT8U  CommGetTxChar (INT8U *err)
 *********************************************************************************************************
 */
 
-void  CommInit (void)
+void CommInit (void)
 {
     COMM_RING_BUF *pbuf;
     
@@ -240,7 +240,7 @@ INT8U  CommPutChar (INT8U c)
             pbuf->RingBufTxInPtr = &pbuf->RingBufTx[0];
         }
         if (pbuf->RingBufTxCtr == 1) {                     /* 첫 번째 데이터인가?                      */ 
-            CommTxIntEn(ch);                               /* 예, 송신 인터럽트 활성화                 */
+            CommTxIntEn();                               /* 예, 송신 인터럽트 활성화                 */
             OS_EXIT_CRITICAL();
         } else {
             OS_EXIT_CRITICAL();
