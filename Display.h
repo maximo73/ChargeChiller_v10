@@ -20,7 +20,7 @@ void FND_2b(int number)		// Pressure Display
 {
      unsigned int i;      
      
-	CHAR_FND[0] = ' ';						//   0.0
+	CHAR_FND[0] = ' ';						// Nul
 		
 	i = number / 10;      
 	CHAR_FND[1] = (unsigned char)(i + '0');
@@ -81,7 +81,6 @@ void FND_s1c(int number)		// Temperature Offset Display
 	CHAR_FND[3] = 'c';		// 'C 표시
 }
 
-
 void FND_2ds(int number)		// Time(Second) Display
 {
      unsigned int i;      
@@ -106,6 +105,21 @@ void FND_1d(int number)		// Operation Mode Display
 	CHAR_FND[3] = (unsigned char)(number + '0');		// 값 표시
 }
 
+void FND_2d(int number)		// address Display
+{
+     unsigned int i;      
+     
+	CHAR_FND[0] = ' ';						//   0.0
+	CHAR_FND[1] = ' ';						//   0.0
+		
+	i = number / 10;      
+     if(i == 0) CHAR_FND[1] = ' ';				//   0
+	else CHAR_FND[2] = (unsigned char)(i + '0');
+	
+	i = number % 10;
+	CHAR_FND[3] = (unsigned char)(i + '0');
+} 
+     
 // Status Display and Parameter Setting
 unsigned int KEY_INPUT(void)
 {
@@ -152,6 +166,7 @@ void SetModeModify00(void)		// System Run Delay
 			SystemRunDelay = temp;
 			EE_PUT(100,(unsigned char)SystemRunDelay); 							
 			EE_PUT(101,(unsigned char)(SystemRunDelay>>8)); 
+			HoReg[0] = (unsigned int)SystemRunDelay;
 			break;
 		case Kup:
 			temp++;
@@ -191,6 +206,8 @@ void SetModeModify01(void)		// System Stop Delay
 			SystemStopDelay = temp;
 			EE_PUT(102,(unsigned char)SystemStopDelay); 							
 			EE_PUT(103,(unsigned char)(SystemStopDelay>>8)); 
+			HoReg[1] = (unsigned int)SystemStopDelay;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -230,6 +247,8 @@ void SetModeModify02(void)		// Delay for Warning & Alarm after Power ON
 			StartAlarmDelay = temp;
 			EE_PUT(104,(unsigned char)StartAlarmDelay); 							
 			EE_PUT(105,(unsigned char)(StartAlarmDelay>>8)); 
+			HoReg[2] = (unsigned int)StartAlarmDelay;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -269,6 +288,8 @@ void SetModeModify03(void)		// Delay for Warning & Alarm in Running
 			RunAlarmDelay = temp;
 			EE_PUT(106,(unsigned char)RunAlarmDelay); 							
 			EE_PUT(107,(unsigned char)(RunAlarmDelay>>8)); 
+			HoReg[3] = (unsigned int)RunAlarmDelay;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -308,6 +329,8 @@ void SetModeModify04(void)		// Oil temperature for warning
 			OilWarningTemp = temp;
 			EE_PUT(108,(unsigned char)OilWarningTemp); 							
 			EE_PUT(109,(unsigned char)(OilWarningTemp>>8)); 
+			HoReg[4] = (unsigned int)OilWarningTemp;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -347,6 +370,8 @@ void SetModeModify05(void)		// Oil temperature for alarm
 			OilAlarmTemp = temp;
 			EE_PUT(110,(unsigned char)OilAlarmTemp);		 
      		EE_PUT(111,(unsigned char)(OilAlarmTemp>>8));
+			HoReg[5] = (unsigned int)OilAlarmTemp;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -370,6 +395,7 @@ void SetModeModify05(void)		// Oil temperature for alarm
 	bQuit = CLR;
 }
 
+/*
 void SetModeModify06(void)		// // Heater Run Temperature
 {
 	int temp = 0;
@@ -386,6 +412,7 @@ void SetModeModify06(void)		// // Heater Run Temperature
 			HeatRunTemp = temp;
 			EE_PUT(112,(unsigned char)HeatRunTemp);		 
      		EE_PUT(113,(unsigned char)(HeatRunTemp>>8));
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -425,6 +452,7 @@ void SetModeModify07(void)		// Heater Stop Temperature
 			HeatStopTemp = temp;
 			EE_PUT(114,(unsigned char)HeatStopTemp);		 
      		EE_PUT(115,(unsigned char)(HeatStopTemp>>8));
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -447,6 +475,7 @@ void SetModeModify07(void)		// Heater Stop Temperature
      }
 	bQuit = CLR;
 }
+*/
 
 void SetModeModify08(void)		// Fan Run Temperature 
 {
@@ -463,7 +492,9 @@ void SetModeModify08(void)		// Fan Run Temperature
 		case Kenter:
 			FanRunTemp = temp;
 			EE_PUT(116,(unsigned char)FanRunTemp);		 
-     		EE_PUT(117,(unsigned char)(FanRunTemp>>8));
+     		EE_PUT(117,(unsigned char)(FanRunTemp>>8));				
+			HoReg[6] = (unsigned int)FanRunTemp;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -502,7 +533,9 @@ void SetModeModify09(void)		// Fan Stop Temperature
 		case Kenter:
 			FanStopTemp = temp;
 			EE_PUT(118,(unsigned char)FanStopTemp);		 
-     		EE_PUT(119,(unsigned char)(FanStopTemp>>8));
+     		EE_PUT(119,(unsigned char)(FanStopTemp>>8));				
+			HoReg[7] = (unsigned int)FanStopTemp;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -510,7 +543,7 @@ void SetModeModify09(void)		// Fan Stop Temperature
 			break;
 		case Kdown:			
 			temp--;
-			if(temp <= HeatStopTemp) temp = HeatStopTemp + 1;
+			if(temp <= 0) temp = 0;
 			break;
 		case Kmode:
 			bQuit = SET;
@@ -541,6 +574,7 @@ void SetModeModify10(void)		// Temperature Offset
 		case Kenter:
 			OffsetTP = temp;
 			EE_PUT(120,(unsigned char)OffsetTP);	
+			HoReg[8] = (unsigned int)OffsetTP;
 			bQuit = SET;
 			break;
 		case Kup:
@@ -582,6 +616,8 @@ void SetModeModify11(void)		// Lowest Pressure
 			LowPR = temp;
 			EE_PUT(122,(unsigned char)LowPR);		 
      		EE_PUT(123,(unsigned char)(LowPR>>8));
+			HoReg[9] = (unsigned int)LowPR;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -621,10 +657,12 @@ void SetModeModify12(void)		// Highest pressure
 			HighPR = temp;
 			EE_PUT(124,(unsigned char)HighPR);		 
      		EE_PUT(125,(unsigned char)(HighPR>>8));
+			HoReg[10] = (unsigned int)HighPR;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
-			if(temp > 100) temp = 100;
+			if(temp > 160) temp = 160;
 			break;
 		case Kdown:			
 			temp--;
@@ -660,6 +698,8 @@ void SetModeModify13(void)		// Setpoint Pressure
 			SetPR = temp;
 			EE_PUT(126,(unsigned char)SetPR);		 
      		EE_PUT(127,(unsigned char)(SetPR>>8));
+			HoReg[11] = (unsigned int)SetPR;
+			bQuit = SET;
 			break;
 		case Kup:
 			temp++;
@@ -697,7 +737,8 @@ void SetModeModify14(void)		// Pressure Offset
 		switch(KEY_INPUT()) {
 		case Kenter:
 			OffsetPR = temp;
-			EE_PUT(128,(unsigned char)OffsetPR);	
+			EE_PUT(128,(unsigned char)OffsetPR);
+			HoReg[12] = (unsigned int)OffsetPR;
 			bQuit = SET;
 			break;
 		case Kup:
@@ -736,7 +777,8 @@ void SetModeModify15(void)		// Pump Control Mode
 		switch(KEY_INPUT()) {
 		case Kenter:
 			PumpMode = (unsigned char)temp & 0x01;
-			EE_PUT(50,(unsigned char)PumpMode);	
+			EE_PUT(50,(unsigned char)PumpMode);
+			HoReg[13] = (unsigned int)PumpMode;
 			bQuit = SET;
 			break;
 		case Kup:
@@ -773,6 +815,7 @@ void SetModeModify16(void)		// Select Pressure Sensor
 		case Kenter:
 			SensorMode = temp;
 			EE_PUT(130,(unsigned char)SensorMode);	
+			HoReg[14] = (unsigned int)SensorMode;
 			bQuit = SET;
 			break;
 		case Kup:
@@ -786,6 +829,88 @@ void SetModeModify16(void)		// Select Pressure Sensor
 		default:
 			if(TimeSchFlag & 0x04){
 				FND_2b(temp);
+				TimeSchFlag &= ~0x04;			// 400ms Time-Flag Clear
+			}
+			break;
+		}
+     }
+	bQuit = CLR;
+}
+
+void SetModeModify17(void)		// Communicaiton Addres
+{
+	int temp = 0;
+
+     temp = ComAddr;
+
+     bQuit = CLR;
+	
+	FND_2d(temp);
+           		
+     while(!bQuit) {
+		switch(KEY_INPUT()) {
+		case Kenter:
+			ComAddr = temp;
+			EE_PUT(132,(unsigned char)ComAddr);
+			HoReg[15] = (unsigned int)ComAddr;
+			bQuit = SET;
+			break;
+		case Kup:
+			temp++;
+			if(temp > 31) temp = 31;
+			break;
+		case Kdown:			
+			temp--;
+			if(temp < 1) temp = 1;
+			break;
+		case Kmode:
+			bQuit = SET;
+			break;
+		default:
+			if(TimeSchFlag & 0x04){
+				FND_2d(temp);
+				TimeSchFlag &= ~0x04;			// 400ms Time-Flag Clear
+			}
+			break;
+		}
+     }
+	bQuit = CLR;
+}
+
+void SetModeModify18(void)		// Communicaiton Baudrate
+{
+	int temp = 0;
+
+     temp = IndBaud;
+
+     bQuit = CLR;
+	
+	FND_1d(temp);
+           		
+     while(!bQuit) {
+		switch(KEY_INPUT()) {
+		case Kenter:
+			IndBaud = temp;
+			EE_PUT(134,(unsigned char)IndBaud);	
+			HoReg[16] = (unsigned int)IndBaud;
+			UBRR1L = Baudrate[IndBaud];	// 0:4800bps, 1:9600bps, 2:14,4kbps, 3:19.2kbps, 4:28.8kbps
+									// 5:38.4kbps, 6:57.6kbps, 7:76.8kbps, 8:115.2kbps
+			bQuit = SET;
+			break;
+		case Kup:
+			temp++;
+			if(temp > 8) temp = 8;
+			break;
+		case Kdown:			
+			temp--;
+			if(temp < 0) temp = 0;
+			break;
+		case Kmode:
+			bQuit = SET;
+			break;
+		default:
+			if(TimeSchFlag & 0x04){
+				FND_1d(temp);
 				TimeSchFlag &= ~0x04;			// 400ms Time-Flag Clear
 			}
 			break;
@@ -815,12 +940,12 @@ void SetModeModify(char item)
 		case 5:						// Oil temperature for alarm
 				SetModeModify05();
 				break;
-		case 6:						// Heater Run Temperature
-				SetModeModify06();
-				break;
-		case 7:						// Heater Stop Temperature
-				SetModeModify07();
-				break;
+//		case 6:						// Heater Run Temperature
+//				SetModeModify06();
+//				break;
+//		case 7:						// Heater Stop Temperature
+//				SetModeModify07();
+//				break;
 		case 8:						// Fan Run Temperature
 				SetModeModify08();
 				break;
@@ -847,6 +972,12 @@ void SetModeModify(char item)
 				break;
 		case 16:						// Select Pressure Sensor
 				SetModeModify16();
+				break;;
+		case 17:						// Communicaiton Addres
+				SetModeModify17();
+				break;
+		case 18:						// Communication Baudrate
+				SetModeModify18();
 				break;
 		default:	break;
 	}
@@ -890,18 +1021,18 @@ void SetModeDisplay(char item)
 			CHAR_FND[2] = 'a';
 			CHAR_FND[3] = 't';
 			break;
-		case 6: 	
-			CHAR_FND[0] = ' ';
-			CHAR_FND[1] = 'h';
-			CHAR_FND[2] = 'r';
-			CHAR_FND[3] = 't';
-			break;
-		case 7: 	
-			CHAR_FND[0] = ' ';
-			CHAR_FND[1] = 'h';
-			CHAR_FND[2] = 'S';
-			CHAR_FND[3] = 't';
-			break;
+//		case 6: 	
+//			CHAR_FND[0] = ' ';
+//			CHAR_FND[1] = 'h';
+//			CHAR_FND[2] = 'r';
+//			CHAR_FND[3] = 't';
+//			break;
+//		case 7: 	
+//			CHAR_FND[0] = ' ';
+//			CHAR_FND[1] = 'h';
+//			CHAR_FND[2] = 'S';
+//			CHAR_FND[3] = 't';
+//			break;
 		case 8: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'F';
@@ -917,32 +1048,32 @@ void SetModeDisplay(char item)
 		case 10: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'o';
-			CHAR_FND[2] = 'S';
+			CHAR_FND[2] = 'F';
 			CHAR_FND[3] = 't';
 			break;
 		case 11: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'L';
-			CHAR_FND[2] = 'p';
+			CHAR_FND[2] = 'P';
 			CHAR_FND[3] = 'r';
 			break;
 		case 12: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'h';
-			CHAR_FND[2] = 'p';
+			CHAR_FND[2] = 'P';
 			CHAR_FND[3] = 'r';
 			break;
 		case 13: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'S';
-			CHAR_FND[2] = 'p';
+			CHAR_FND[2] = 'P';
 			CHAR_FND[3] = 'r';
 			break;
 		case 14: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'o';
-			CHAR_FND[2] = 'p';
-			CHAR_FND[3] = 'r';
+			CHAR_FND[2] = 'F';
+			CHAR_FND[3] = 'p';
 			break;
 		case 15: 	
 			CHAR_FND[0] = ' ';
@@ -952,8 +1083,20 @@ void SetModeDisplay(char item)
 			break;
 		case 16: 	
 			CHAR_FND[0] = ' ';
-			CHAR_FND[1] = 'p';
+			CHAR_FND[1] = 'P';
 			CHAR_FND[2] = 'r';
+			CHAR_FND[3] = 'S';
+			break;
+		case 17: 	
+			CHAR_FND[0] = ' ';
+			CHAR_FND[1] = 'a';
+			CHAR_FND[2] = 'd';
+			CHAR_FND[3] = 'r';
+			break;
+		case 18: 	
+			CHAR_FND[0] = ' ';
+			CHAR_FND[1] = 'b';
+			CHAR_FND[2] = 'P';
 			CHAR_FND[3] = 'S';
 			break;
 		default:	break;
@@ -971,15 +1114,17 @@ void SetMode(void)
 		switch(KEY_INPUT()) {
 		case Kenter:
 			SetModeModify(iSetMode);
-			preSetMode = 17;
+			preSetMode = 19;
 			break;
 		case Kup:
 			iSetMode--;
-			if(iSetMode < 0) iSetMode = 16;
+               if(iSetMode == 7) iSetMode = 5;
+			if(iSetMode < 0) iSetMode = 18;
 			break;
 		case Kdown:			
 			iSetMode++;
-			if(iSetMode > 16) iSetMode = 0;
+               if(iSetMode == 6) iSetMode = 8;
+			if(iSetMode > 18) iSetMode = 0;
 			break;
 		case Kmode:
 			bPASS = SET;
@@ -1161,7 +1306,6 @@ void MainMenu(void)
 						FND_2d1b(data);
 					}else { 			// Temperature
 						data = NowTP;
-//						FND_2d1b(data);
 						FND_s2c(data);
 					}
 					
