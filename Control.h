@@ -13,18 +13,16 @@ __interrupt void T0_COMP(void)
 	if(CNT_FND > 3) CNT_FND = 0;
 	
 
-	/*//-------------------------------- MODBUS RTU Communication for Inverter -------------------------------------
-Count_Query1++;			     // Inveter로부터 데이터 수신이 되지 않을 경우 카운터
-if(Count_Query1 > 5) Count_Query1 = 5;	// 카운터가 5 이상(15ms) 될 경우, 이를 초과하지 않음
- 
-if(!Flag_EndQuery1 && (Count_Query1 >= 2) && Flag_Query1) {	
-//이전 수신된 데이터를 처리하였는가?, 데이터가 수신되었는가?,
-Flag_Query1 = CLR;	//수신후 6ms 가 경과하였는가? 맞다면 데이터 수신 플래그를 클리어하고
-Flag_EndQuery1 = SET;   //마지막 데이터가 수신되었다는 플래그를 발생시킴
-NumByte1 = Count_NumByte1;	// 수신된 바이트 수 저장
-Count_NumByte1 = 0;   // UART ISR에서 사용된 수신된 바이트 카운트 초기화
-}	*/
-
+	//-------------------------------- MODBUS RTU Communication for Inverter -------------------------------------
+	Count_Query++;			     						// Inveter로부터 데이터 수신이 되지 않을 경우 카운터
+	if(Count_Query > 10) Count_Query = 10;					// 카운터가 5 이상(13ms) 될 경우, 이를 초과하지 않음
+	 
+	if(!Flag_EndQuery && (Count_Query >= 4) && Flag_Query) {	// 이전 수신된 데이터를 처리하였는가?, 데이터가 수신되었는가?,
+		Flag_Query = CLR;								// 수신후 5.2ms 가 경과하였는가? 맞다면 데이터 수신 플래그를 클리어하고
+		Flag_EndQuery = SET;   							// 마지막 데이터가 수신되었다는 플래그를 발생시킴
+		NumByte = Count_NumByte;							// 수신된 바이트 수 저장
+		Count_NumByte = 0;   							// UART ISR에서 사용된 수신된 바이트 카운트 초기화
+	}
 }
 
 //################## Error Detection Function ###################
@@ -78,7 +76,12 @@ void Task_Level(void)					// Check Tank Level
 	unsigned char temp = 0x00;
 	
 	temp = PINA & 0x60;					// Tank Level
-	if(temp & 0x40) {					// Low Level - Alarm & System Stop
+	if(temp & 0x20) InReg[0] |=  0x02;		// Tank Level 1 status(middle level)
+	else			 InReg[0] &= ~0x02;
+	if(temp & 0x40) InReg[0] |=  0x04;		// Tank Level 2 status(low level)
+	else			 InReg[0] &= ~0x04;
+	
+	if(temp & 0x40) {					// Low Level(tank level signal 2) - Alarm & System Stop
 		CNT_AlarmLV++;
 		if(CNT_AlarmLV >= RunAlarmDelay){
 			CNT_AlarmLV = RunAlarmDelay;
@@ -91,7 +94,7 @@ void Task_Level(void)					// Check Tank Level
 	}
 
 		
-	if(temp & 0x20) {					// Middle Level - Warning & System Run
+	if(temp & 0x20) {					// Middle Level(tank level signal 1) - Warning & System Run
 		CNT_WarningLV++;
 		if(CNT_WarningLV >= RunAlarmDelay){
 			CNT_WarningLV = RunAlarmDelay;
@@ -100,6 +103,23 @@ void Task_Level(void)					// Check Tank Level
 		}
 	}
 
+}
+
+void Task_Pump(void)				// Pump Fault Check
+{
+	unsigned char temp = 0x00;
+	
+	temp = PINA & 0x80;
+	if(temp & 0x80) {
+		CNT_PumpFault++;
+		if(CNT_PumpFault > 2){
+			CNT_PumpFault = 2;
+			NowERROR |= 0x80;
+		}
+	}else {
+		CNT_PumpFault = 0;
+		NowERROR &= ~0x80;
+	}
 }
 
 
@@ -117,12 +137,18 @@ void Error_Check(void)
 	}
 	
 	Task_Level();					// Check Tank Level
+	Task_Pump();					// Pump Fault Check
 	
-	if(NowERROR & 0x2C) {			// Pressure Low/High, Low Level Alarm
+	if(NowERROR) PORTD_Bit6 = 1;
+	else 	   PORTD_Bit6 = 0;
+	
+	if(NowERROR & 0xAC) {			// Pump Fault, Pressure Low/High, Low Level Alarm
 		PORTB_Bit3 = 1;			// Total Alarm Relay ON (ARM Relay Port)
 	}else{
 		PORTB_Bit3 = 0;			// Total Alarm Relay OFF
 	}
+	
+	InReg[2] = (unsigned int)NowERROR;
 }
 
 //################## Control Function ###################
@@ -160,21 +186,29 @@ void PID(void)			// 속도제어할 경우에만 사용함.
 
 void Main_Control(void)
 {	
+	unsigned char temp = 0x00;
+	
+	temp = PINA & 0x10;			// System OFF/ON Signal(DI-1, PA.4)
+	if(temp & 0x10) InReg[0] |=  0x01;
+	else			 InReg[0] &= ~0x01;
+	
 	// Fan Control (팬은 전원만 투입되면 무조건 운전함.)
 	if(NowTP > FanRunTemp){
 		PORTD_Bit7 = 1;							// Fan LED ON
 		PORTB_Bit7 = 1;							// Fan Relay ON
+		InReg[1] |=  0x02;
 	}else if(NowTP < FanStopTemp){
 		PORTD_Bit7 = 0;							// Fan LED OFF
 		PORTB_Bit7 = 0;							// Fan Relay OFF
+		InReg[1] &= ~0x02;
 	}
 	
 	// Pump Run/Stop Check	
-	if(NowERROR & 0x2C){							// 저수위, 상한/하한압력 고장이 발생하면 자동운전 OFF
+	if(NowERROR & 0xAC){							// 저수위, 상한/하한압력 고장이 발생하면 자동운전 OFF
 		Ctrl &= ~0x01;
 	}else {
 		if(Ctrl & 0x01){							// if, 자동운전 중
-			if((PINA & 0x10) == 0x00){				// 자동운전 OFF 신호가 입력되면
+			if((temp & 0x10) == 0x00){				// 자동운전 OFF 신호가 입력되면
 				CNT_StopDelay++;
 				CNT_RunDelay = 0;
 				if(CNT_StopDelay > SystemStopDelay * 10){		// 시스템 정지 신호 지연
@@ -183,7 +217,7 @@ void Main_Control(void)
 				}
 			} else CNT_StopDelay = 0;
 		}else {									// if, 자동운전 대기
-			if((PINA & 0x10) == 0x10){				// 자동운전 ON 신호가 입력되면
+			if((temp & 0x10) == 0x10){				// 자동운전 ON 신호가 입력되면
 				CNT_RunDelay++;
 				CNT_StopDelay = 0;
 				if(CNT_RunDelay > SystemRunDelay*10) {			// 시스템 운전 신호 지연
@@ -204,6 +238,7 @@ void Main_Control(void)
 		PORTD_Bit4 = 1;							// Run LED ON	
 		PORTD_Bit5 = 1;							// Pump LED ON	
 		PORTB_Bit6 = 1;							// Pump Relay ON
+		InReg[1] |= 0x01;
 	}else {										// Auto OFF		
 		if(PumpMode & 0x01){
 			if((PWM_OUT < 20)) {					// Speed Control Mode에서 속도출력이 0이 되면 모든 상태 정지로...
@@ -211,11 +246,13 @@ void Main_Control(void)
 				PWM_OUT = 0;
 				PORTD_Bit5 = 0;					// Pump LED OFF
 				PORTB_Bit6 = 0;					// Pump Relay OFF
+				InReg[1] &= ~0x01;
 				PORTD_Bit4 = 0;					// Run LED OFF
 			}
 		}else {
 			PORTD_Bit5 = 0;						// Pump LED OFF
 			PORTB_Bit6 = 0;						// Pump Relay OFF
+			InReg[1] &= ~0x01;
 			PORTD_Bit4 = 0;						// Run LED OFF
 		}
 	}
@@ -343,12 +380,11 @@ __interrupt void T1A_COMP(void)
 			
 	if((Cnt_Task1 % 10) == 9){						// 1 second Task
 		if(FLG_CheckAlarm) Error_Check();				// ERROR Detection
-//		if(boggle) PORTD_Bit6 = 1;
-//		else		 PORTD_Bit6 = 0;
-//		boggle ^= 1;
 	}	
 	
 	if(PumpMode & 0x01) PID();						// Speed Control at Jumper Short
 			
 	Main_Control();
+	
+	TASK_BMS_COMM();
 }
