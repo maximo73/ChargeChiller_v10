@@ -268,7 +268,7 @@ int HWrite_HoReg(unsigned int RegAddr, unsigned int data)
 		HoReg[13] = (unsigned int)PumpMode;
 		break;	
 	case 14:		// Select Pressure Sensor
-		if(((int)data == 10) || ((int)data ==  16)) return(0);	
+		if(((int)data == 0) || ((int)data ==  1)) return(0);	
 		
 		SensorMode = (int)data;
 		EE_PUT(130,(unsigned char)SensorMode);	
@@ -503,7 +503,6 @@ void TX_Write_HoReg(unsigned int RegAddr, unsigned int RegValue)		// Write Holdi
 void TX_Exception_Code(unsigned char excode)
 {
 	unsigned int temp = 0;
-//	int i;
 	
 	// Slave ID
 	TX_BUFF[0] = (unsigned char)ComAddr;
@@ -588,8 +587,7 @@ void PACKET_CHK(void) 				// 디스플레이 보드와 통신
 	}
      
      //************** Analsys for Packet *************
-        
-     FunCode = RX_BUFF[1];			// Function Code
+     FunCode = RX_BUFF[1];		// Function Code
      switch(FunCode){
 	     case 0x03:			// Read Holding Register
      		RegAddr = (unsigned int)RX_BUFF[2]<<8 | (unsigned int)RX_BUFF[3];
@@ -621,7 +619,6 @@ void TASK_BMS_COMM(void)			//100ms 단위로 수행
 		if(Flag_EndQuery) {
 			PACKET_CHK();				//패킷 분석
 			Flag_EndQuery = CLR;
-			//Cnt_NoComm = 0;
 		}
 	}
 }
