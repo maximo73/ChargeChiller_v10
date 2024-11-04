@@ -18,9 +18,6 @@
 	108~109	int			OilWarningTemp			윤활유 경고 온도
 	110~111	int			OilAlarmTemp			윤활유 알람 온도
 
-	112~113	int			HeatRunTemp			히터 운전 온도
-	114~115	int			HeatStopTemp			히터 정지 온도
-
 	116~117	int			FanRunTemp			팬 운전 온도
 	118~119	int			FanStopTemp			팬 정지 온도
 
@@ -187,10 +184,7 @@ unsigned char	PumpMode;				// Pump Control Mode
 		
 		int	OilWarningTemp;		// Oil temperature for warning
 		int	OilAlarmTemp;			// Oil temperature for alarm
-		
-//		int	HeatRunTemp;			// Heater Run Temperature
-//		int	HeatStopTemp;			// Heater Stop Temperature
-		
+
 		int	FanRunTemp;			// Fan Run Temperature
 		int	FanStopTemp;			// Fan Stop Temperature
           
@@ -215,8 +209,10 @@ unsigned  char NowERROR, PreERROR;	// NowERROR: Current Error, PreERROR: Error b
 //			NowERROR.1: Oil Temp. Alarm
 //			NowERROR.2: Low Pressure 
 //			NowERROR.3: High Pressure
+
 //			NowERROR.4: Level Warning(Middle)
 //			NowERROR.5: Level Alarm(Low)
+//             NowERROR.6: Level Sensor Fault
 
 		int  CNT_RunDelay, CNT_StopDelay;		// System Run/Stop Signal Delay
 		char CNT_CheckAlarm, FLG_CheckAlarm;	// Check Delay for Alarm after Power ON
@@ -273,8 +269,8 @@ unsigned 	char TimeSchFlag;				// 기본 타스크주기를 위한 플래그 레
 		int  Error_index;				// index for error display
 
 ////#########  Variable for Display Communication ###########
-unsigned int InReg[5];		// Address 0x0000(0) ~ 0x0005(5)
-unsigned int HoReg[17];		// Address 0x000A(10)~ 0x001A(26)
+unsigned int InReg[5];		               // Address 0x0000(0) ~ 0x0005(5)
+unsigned int HoReg[17];		               // Address 0x000A(10)~ 0x001A(26)
 unsigned char TX_BUFF[20], RX_BUFF[20];
 	    char Flag_Query;
 	    char Count_Query;
@@ -302,7 +298,6 @@ void TASK_temperature(void)  					// Temperature Processing
      sum -= max;
      sum -= min;
      AD_result0 = sum/8;  
-//	temp = (float)AD_result0;
 
 	// Temperature -50(3389 kohm, 15) ~ 99(3.391kohm, 958)
 	if(AD_result0 > 939)      fdata = 0.4813 * AD_result0 - 362.0443;
@@ -322,67 +317,9 @@ void TASK_temperature(void)  					// Temperature Processing
 	else if(AD_result0 > 29)  fdata = 0.3962 * AD_result0 - 51.6117;
 	else if(AD_result0 > 15)  fdata = 0.6915 * AD_result0 - 60.2646;
 	else                      fdata = -50;  
-	
-//	
-//	if( temp <= 15.){					// below -50 15,
-//		fdata = -50.;
-//	}	
-//	if(15. < temp <= 29.){			// -49'C ~ -40'C
-//		fdata = 0.6915 * temp - 60.2646;
-//	}
-//	if(29. < temp <= 55.){			// -39'C ~ -30'C
-//		fdata = 0.3962 * AD_result0 - 51.6117;
-//	}
-//	if(55. < temp <= 96.){			// -29'C ~ -20'C
-//		fdata = 0.2435 * temp - 43.2811;
-//	}
-//	if(96. < temp <= 157.){			// -19'C ~ -10'C
-//		fdata = 0.1626 * temp - 35.5455;
-//	}
-//	if(157. < temp <= 241.){		// -9'C ~ 0'C
-//		fdata = 0.1190 * temp - 28.7014;
-//	}
-//	if(241. < temp <= 344.){		// 1'C ~ 10'C
-//		fdata = 0.0970 * temp - 23.3806;
-//	}
-//	if(344. < temp <= 458.){		// 11'C ~ 20'C
-//		fdata = 0.0881 * temp - 20.3154;
-//	}
-//	if(458. < temp <= 515.){		// 21'C ~ 25'C
-//		fdata = 0.0876 * AD_result0 - 20.1052;
-//	}
-//	if(515. < temp <= 570.){		// 25'C ~ 30'C
-//		fdata = 0.0904 * temp - 21.5281;
-//	}
-//	if(570. < temp <= 671.){		// 31'C ~ 40'C
-//		fdata = 0.0988 * temp - 26.3603;
-//	}
-//	if(671. < temp <= 756.){		// 41'C ~ 50'C
-//		fdata = 0.1185 * temp - 39.5524;
-//	}
-//	if(756. < temp <= 823.){		// 51'C ~ 60'C
-//		fdata = 0.1498 * temp - 63.2482;
-//	}
-//	if(823. < temp <= 873.){		// 61'C ~ 70'C
-//		fdata = 0.1966 * temp - 101.6736;	
-//	}
-//	if(873. < temp <= 911.){		// 71'C ~ 80'C
-//		fdata = 0.2641 * temp - 160.7125;		
-//	}
-//	if(911. < temp <= 939.){		// 81'C ~ 90'C
-//		fdata = 0.3582 * temp - 246.4384;		
-//	}
-//	if(939. < temp <= 958.){		// 91'C ~ 99'C
-//		fdata = 0.4813 * temp - 362.0443;			
-//	}
-//	if(temp > 958.){
-//		fdata = 99.;
-//	}
-	
+		
 	fdata += ((float)OffsetTP - 5.);
 
-	// fdata  = (1.1667 * (float)AD_result[ch]) - (335.3372 - (float)OffsetTP);
-	// fdata  = 0.0000003*temp*temp*temp - 0.0004*temp*temp + 0.2766*temp - (47.404 - ((float)OffsetTP-5.));
 	if(fdata < -50.) fdata = -50.;
 	if(fdata >  99.) fdata =  99.;
 
@@ -410,7 +347,7 @@ void TASK_pressure(void)  					// Pressure Processing
 	temp = (float)AD_result1;
 	
 	// Pressure 0.0 ~ 10.0 bar
-	if(SensorMode == 16){
+	if(SensorMode == 1){
 		fdata  = (0.0196 * temp) - (4.0098 - ((float)OffsetPR - 5.)/10.);
 		if(fdata < 0.) fdata = 0.;
 		if(fdata > 16.) fdata = 16.;
@@ -427,7 +364,7 @@ void TASK_pressure(void)  					// Pressure Processing
 void EEPROM_Init(void)
 {	
      // int type variable initializ	
-	PumpMode = 0x01;				// Pump Control Mode = 0 (On/Off Control)
+	PumpMode = 0x01;				// Pump Control Mode: bit.0=1(PID Control), bit.0=0(On/Off Control)
 	EE_PUT(50, PumpMode);
 	
      SystemRunDelay = 1;			// System Run Delay = 1 sec
@@ -454,14 +391,6 @@ void EEPROM_Init(void)
      EE_PUT(110,(unsigned char)OilAlarmTemp);				  
      EE_PUT(111,(unsigned char)(OilAlarmTemp>>8));	
 		
-//	HeatRunTemp = 0;			// Heater Run Temperature = 0 'C
-//     EE_PUT(112,(unsigned char)HeatRunTemp);				  
-//     EE_PUT(113,(unsigned char)(HeatRunTemp>>8));	
-//	
-//	HeatStopTemp = 10;			// Heater Stop Temperature = 10 'C
-//     EE_PUT(114,(unsigned char)HeatStopTemp);				  
-//     EE_PUT(115,(unsigned char)(HeatStopTemp>>8));	
-//		
 	FanRunTemp = 20;			// Fan Run Temperature = 20 'C
      EE_PUT(116,(unsigned char)FanRunTemp);				  
      EE_PUT(117,(unsigned char)(FanRunTemp>>8));
@@ -488,7 +417,7 @@ void EEPROM_Init(void)
 	OffsetPR = 5;				// Pressure Offset = 0.0 bar
      EE_PUT(128,(unsigned char)OffsetPR);	
 	
-	SensorMode = 16;			// SensorMode = 16bar
+	SensorMode = 1;			// SensorMode = 1[16bar]
 	EE_PUT(130,(unsigned char)SensorMode);
 	
 	ComAddr = 1;				// Communication address = 1
@@ -520,8 +449,6 @@ void VARIABLE_Init(void)
 	
 	OilAlarmTemp 		= ((unsigned int)EE_GET(111)<<8) + (unsigned int)EE_GET(110);		// Oil temperature for alarm = 95 'C
 	HoReg[5]			= (unsigned int)OilAlarmTemp;
-//	HeatRunTemp 		= ((unsigned int)EE_GET(113)<<8) + (unsigned int)EE_GET(112);		// Heater Run Temperature = 0 'C
-//	HeatStopTemp 		= ((unsigned int)EE_GET(115)<<8) + (unsigned int)EE_GET(114);		// Heater Stop Temperature = 10 'C
 	FanRunTemp 		= ((unsigned int)EE_GET(117)<<8) + (unsigned int)EE_GET(116);		// Fan Run Temperature = 20 'C
 	HoReg[6]			= (unsigned int)FanRunTemp;
 	FanStopTemp 		= ((unsigned int)EE_GET(119)<<8) + (unsigned int)EE_GET(118);		// Fan Stop Temperature = 15 'C
@@ -539,7 +466,7 @@ void VARIABLE_Init(void)
 	HoReg[12]			= (unsigned int)OffsetPR;
 	PumpMode			= EE_GET(50);												// Pump Control Mode	
 	HoReg[13]			= (unsigned int)PumpMode;
-	SensorMode 		= (unsigned int)EE_GET(130);									// SensorMode = 16bar
+	SensorMode 		= (unsigned int)EE_GET(130);									// SensorRange[SensorMode] = 16bar
 	HoReg[14]			= (unsigned int)SensorMode;
 	ComAddr			= (unsigned int)EE_GET(132);									// Communication address = 1	
 	HoReg[15]			= (unsigned int)ComAddr;
