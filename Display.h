@@ -395,89 +395,7 @@ void SetModeModify05(void)		// Oil temperature for alarm
 	bQuit = CLR;
 }
 
-/*
-void SetModeModify06(void)		// // Heater Run Temperature
-{
-	int temp = 0;
-
-     temp = HeatRunTemp;
-
-     bQuit = CLR;
-	
-	FND_s2c(temp);
-           		
-     while(!bQuit) {
-		switch(KEY_INPUT()) {
-		case Kenter:
-			HeatRunTemp = temp;
-			EE_PUT(112,(unsigned char)HeatRunTemp);		 
-     		EE_PUT(113,(unsigned char)(HeatRunTemp>>8));
-			bQuit = SET;
-			break;
-		case Kup:
-			temp++;
-			if(temp >= HeatStopTemp) temp = HeatStopTemp - 1;
-			break;
-		case Kdown:			
-			temp--;
-			if(temp < -10) temp = -10;
-			break;
-		case Kmode:
-			bQuit = SET;
-			break;
-		default:
-			if(TimeSchFlag & 0x04){
-				FND_s2c(temp);
-				TimeSchFlag &= ~0x04;			// 400ms Time-Flag Clear
-			}
-			break;
-		}
-     }
-	bQuit = CLR;
-}
-
-void SetModeModify07(void)		// Heater Stop Temperature
-{
-	int temp = 0;
-
-     temp = HeatStopTemp;
-
-     bQuit = CLR;
-	
-	FND_s2c(temp);
-           		
-     while(!bQuit) {
-		switch(KEY_INPUT()) {
-		case Kenter:
-			HeatStopTemp = temp;
-			EE_PUT(114,(unsigned char)HeatStopTemp);		 
-     		EE_PUT(115,(unsigned char)(HeatStopTemp>>8));
-			bQuit = SET;
-			break;
-		case Kup:
-			temp++;
-			if(temp >= FanStopTemp) temp = FanStopTemp - 1;
-			break;
-		case Kdown:			
-			temp--;
-			if(temp <= HeatRunTemp) temp = HeatRunTemp + 1;
-			break;
-		case Kmode:
-			bQuit = SET;
-			break;
-		default:
-			if(TimeSchFlag & 0x04){
-				FND_s2c(temp);
-				TimeSchFlag &= ~0x04;			// 400ms Time-Flag Clear
-			}
-			break;
-		}
-     }
-	bQuit = CLR;
-}
-*/
-
-void SetModeModify08(void)		// Fan Run Temperature 
+void SetModeModify06(void)		// Fan Run Temperature 
 {
 	int temp = 0;
 
@@ -518,7 +436,7 @@ void SetModeModify08(void)		// Fan Run Temperature
 	bQuit = CLR;
 }
 
-void SetModeModify09(void)		// Fan Stop Temperature
+void SetModeModify07(void)		// Fan Stop Temperature
 {
 	int temp = 0;
 
@@ -559,7 +477,7 @@ void SetModeModify09(void)		// Fan Stop Temperature
 	bQuit = CLR;
 }
 
-void SetModeModify10(void)		// Temperature Offset
+void SetModeModify08(void)		// Temperature Offset
 {
 	int temp = 0;
 
@@ -600,7 +518,7 @@ void SetModeModify10(void)		// Temperature Offset
 }
 
 
-void SetModeModify11(void)		// Lowest Pressure 
+void SetModeModify09(void)		// Lowest Pressure 
 {
 	int temp = 0;
 
@@ -641,7 +559,7 @@ void SetModeModify11(void)		// Lowest Pressure
 	bQuit = CLR;
 }
 
-void SetModeModify12(void)		// Highest pressure
+void SetModeModify10(void)		// Highest pressure
 {
 	int temp = 0;
 
@@ -682,7 +600,7 @@ void SetModeModify12(void)		// Highest pressure
 	bQuit = CLR;
 }
 
-void SetModeModify13(void)		// Setpoint Pressure
+void SetModeModify11(void)		// Setpoint Pressure
 {
 	int temp = 0;
 
@@ -723,7 +641,7 @@ void SetModeModify13(void)		// Setpoint Pressure
 	bQuit = CLR;
 }
 
-void SetModeModify14(void)		// Pressure Offset
+void SetModeModify12(void)		// Pressure Offset
 {
 	int temp = 0;
 
@@ -763,7 +681,7 @@ void SetModeModify14(void)		// Pressure Offset
 	bQuit = CLR;
 }
 
-void SetModeModify15(void)		// Pump Control Mode
+void SetModeModify13(void)		// Pump Control Mode
 {
 	int temp = 0;
 
@@ -800,7 +718,7 @@ void SetModeModify15(void)		// Pump Control Mode
 	bQuit = CLR;
 }
 
-void SetModeModify16(void)		// Select Pressure Sensor
+void SetModeModify14(void)		// Select Pressure Sensor
 {
 	int temp = 0;
 
@@ -820,15 +738,15 @@ void SetModeModify16(void)		// Select Pressure Sensor
 			break;
 		case Kup:
 		case Kdown:	
-			if(temp == 16) temp = 10;
-			else			temp = 16;
+			if(temp == 1)  temp = 0;      // 10bar
+			else		     temp = 1;      // 16bar
 			break;
 		case Kmode:
 			bQuit = SET;
 			break;
 		default:
 			if(TimeSchFlag & 0x04){
-				FND_2b(temp);
+				FND_2b(SensorRange[SensorMode]);
 				TimeSchFlag &= ~0x04;			// 400ms Time-Flag Clear
 			}
 			break;
@@ -837,7 +755,7 @@ void SetModeModify16(void)		// Select Pressure Sensor
 	bQuit = CLR;
 }
 
-void SetModeModify17(void)		// Communicaiton Addres
+void SetModeModify15(void)		// Communicaiton Addres
 {
 	int temp = 0;
 
@@ -877,7 +795,7 @@ void SetModeModify17(void)		// Communicaiton Addres
 	bQuit = CLR;
 }
 
-void SetModeModify18(void)		// Communicaiton Baudrate
+void SetModeModify16(void)		// Communicaiton Baudrate
 {
 	int temp = 0;
 
@@ -940,44 +858,38 @@ void SetModeModify(char item)
 		case 5:						// Oil temperature for alarm
 				SetModeModify05();
 				break;
-//		case 6:						// Heater Run Temperature
-//				SetModeModify06();
-//				break;
-//		case 7:						// Heater Stop Temperature
-//				SetModeModify07();
-//				break;
-		case 8:						// Fan Run Temperature
+		case 6:						// Fan Run Temperature
+				SetModeModify06();
+				break;
+		case 7:						// Fan Stop Temperature
+				SetModeModify07();
+				break;
+		case 8:						// Temperature Offset
 				SetModeModify08();
 				break;
-		case 9:						// Fan Stop Temperature
+		case 9:						// Lowest Pressure
 				SetModeModify09();
 				break;
-		case 10:						// Temperature Offset
+		case 10:						// Highest pressure
 				SetModeModify10();
 				break;
-		case 11:						// Lowest Pressure
+		case 11:						// Setpoint Pressure
 				SetModeModify11();
 				break;
-		case 12:						// Highest pressure
+		case 12:						// Pressure Offset
 				SetModeModify12();
 				break;
-		case 13:						// Setpoint Pressure
+		case 13:						// Pump Control Mode
 				SetModeModify13();
 				break;
-		case 14:						// Pressure Offset
+		case 14:						// Select Pressure Sensor
 				SetModeModify14();
-				break;
-		case 15:						// Pump Control Mode
+				break;;
+		case 15:						// Communicaiton Addres
 				SetModeModify15();
 				break;
-		case 16:						// Select Pressure Sensor
+		case 16:						// Communication Baudrate
 				SetModeModify16();
-				break;;
-		case 17:						// Communicaiton Addres
-				SetModeModify17();
-				break;
-		case 18:						// Communication Baudrate
-				SetModeModify18();
 				break;
 		default:	break;
 	}
@@ -1021,79 +933,67 @@ void SetModeDisplay(char item)
 			CHAR_FND[2] = 'a';
 			CHAR_FND[3] = 't';
 			break;
-//		case 6: 	
-//			CHAR_FND[0] = ' ';
-//			CHAR_FND[1] = 'h';
-//			CHAR_FND[2] = 'r';
-//			CHAR_FND[3] = 't';
-//			break;
-//		case 7: 	
-//			CHAR_FND[0] = ' ';
-//			CHAR_FND[1] = 'h';
-//			CHAR_FND[2] = 'S';
-//			CHAR_FND[3] = 't';
-//			break;
-		case 8: 	
+		case 6: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'F';
 			CHAR_FND[2] = 'r';
 			CHAR_FND[3] = 't';
 			break;
-		case 9: 	
+		case 7: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'F';
 			CHAR_FND[2] = 'S';
 			CHAR_FND[3] = 't';
 			break;
-		case 10: 	
+		case 8: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'o';
 			CHAR_FND[2] = 'F';
 			CHAR_FND[3] = 't';
 			break;
-		case 11: 	
+		case 9: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'L';
 			CHAR_FND[2] = 'P';
 			CHAR_FND[3] = 'r';
 			break;
-		case 12: 	
+		case 10: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'h';
 			CHAR_FND[2] = 'P';
 			CHAR_FND[3] = 'r';
 			break;
-		case 13: 	
+		case 11: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'S';
 			CHAR_FND[2] = 'P';
 			CHAR_FND[3] = 'r';
 			break;
-		case 14: 	
+		case 12: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'o';
 			CHAR_FND[2] = 'F';
 			CHAR_FND[3] = 'p';
 			break;
-		case 15: 	
+		case 13: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'M';
 			CHAR_FND[2] = 'o';
 			CHAR_FND[3] = 'd';
 			break;
-		case 16: 	
+		case 14: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'P';
 			CHAR_FND[2] = 'r';
 			CHAR_FND[3] = 'S';
 			break;
-		case 17: 	
+		case 15: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'a';
 			CHAR_FND[2] = 'd';
 			CHAR_FND[3] = 'r';
 			break;
-		case 18: 	
+		case 16: 	
 			CHAR_FND[0] = ' ';
 			CHAR_FND[1] = 'b';
 			CHAR_FND[2] = 'P';
@@ -1114,17 +1014,15 @@ void SetMode(void)
 		switch(KEY_INPUT()) {
 		case Kenter:
 			SetModeModify(iSetMode);
-			preSetMode = 19;
+			preSetMode = 17;
 			break;
 		case Kup:
 			iSetMode--;
-               if(iSetMode == 7) iSetMode = 5;
-			if(iSetMode < 0) iSetMode = 18;
+			if(iSetMode < 0) iSetMode = 16;
 			break;
 		case Kdown:			
 			iSetMode++;
-               if(iSetMode == 6) iSetMode = 8;
-			if(iSetMode > 18) iSetMode = 0;
+			if(iSetMode > 16) iSetMode = 0;
 			break;
 		case Kmode:
 			bPASS = SET;
