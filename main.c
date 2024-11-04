@@ -1,7 +1,7 @@
 // ########################################################
 // 1. Project Name : JTS & WOWSYS
 // 2. Developer : Gyu-Han. Lee
-// 5. Development Period : 2022. 04. 25 ~ 2021. 05. 20
+// 5. Development Period : 2024. 10. 14 ~ 2024. 11. 08
 // 6. Microcontroller Chip : Atmel ATmega64A-16AU 64pin
 // 7. Development Tool : IAR Embedded Workbench 7.20
 // ########################################################
@@ -35,7 +35,10 @@ typedef float          FP32;                     /* Single precision floating po
 
 __flash unsigned int  MaskW[16] = { 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080,
                                     0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000 };
+
 __flash unsigned char MaskB[8]  = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+
+__flash int SensorRange[2] = {10, 16};
 
 __flash unsigned int Baudrate[9] = {207, 103, 68, 51, 34, 25, 16, 12, 8}; 
 
@@ -166,12 +169,12 @@ void main( void )
 	DDRB  = 0xFD;	// SPI Download
 	PORTB = 0x00;	// PortB.0(1) : Non Connection
 				// PortB.1(0) : SCK Signal
-				// PortB.2(1) : Non Connection <-- Relay 5 Out for Tank Level Alarm 1
-				// PortB.3(1) : Relay 4 Out for Total Alarm <-- for Pump(200W) output <-- Out for Solenoid Valve 2
-				// PortB.4(1) : Relay 3 Out for Tank Level Alarm 2 <-- for Heater(200W) output <-- for Solenoid Valve 1 
-				// PortB.5(1) : Relay 2 Out for Tank Level Alarm 1 <-- for Fan output
-				// PortB.6(1) : Relay 1 Out for Pump(200W) output <-- for Solenoid Valve 2
-				// PortB.7(1) : Relay 0 Out for FAN output <-- for Solenoid Valve 1 <-- for Heater(200W) output
+				// PortB.2(1) : Non Connection 
+				// PortB.3(1) : Relay 4 Out for Total Alarm
+				// PortB.4(1) : Relay 3 Out for Tank Level Alarm 2(Middle Level)
+				// PortB.5(1) : Relay 2 Out for Tank Level Alarm 1(Low Level)
+				// PortB.6(1) : Relay 1 Out for Pump(200W) output
+				// PortB.7(1) : Relay 0 Out for FAN output
 				
 	DDRC  = 0xFF;	// FND Data Bus
 	PORTC = 0x00;	// PORTC.0(1) : FND-a
@@ -184,10 +187,10 @@ void main( void )
 				// PORTA.7(1) : FND-dp
 	
 	DDRD  = 0xFB;	// FND Digit Select & Digital Input
-	PORTD = 0x00;	// PortD.0(1) : Non Connection <-- FND 0 Selection
-				// PortD.1(1) : Non Connection <-- FND 1 Selection
-				// PortD.2(0) : RXD for RS485 MODBUS RTU <-- FND 2 Selection
-				// PortD.3(1) : TXD for RS485 MODBUS RTU <-- FND 3 Selection
+	PORTD = 0x00;	// PortD.0(1) : Non Connection
+				// PortD.1(1) : Non Connection
+				// PortD.2(0) : RXD for RS485 MODBUS RTU
+				// PortD.3(1) : TXD for RS485 MODBUS RTU
 				// PortD.4(1) : LED 0 for System OFF/ON Status
 				// PortD.5(1) : LED 1 for Pump Stop/Run Status
 				// PortD.6(1) : LED 2 for Alarm & Warning Status
@@ -197,19 +200,18 @@ void main( void )
 	PORTE = 0x00;	// PortE.0(0) : MOSI - Data Input
 				// PortE.1(1) : MISO - Data Output
 				// PortE.2(1) : Non Connect
-				// PortE.3(1) : PWM 1 Out
-				// PortE.4(1) : PWM 2 Out
-				// PortE.5(1) ~ PortE.7(1) : Reserved
+				// PortE.3(1) : PWM Out
+				// PortE.4(1) ~ PortE.7(1) : Reserved
 	
 	DDRF  = 0xFC;	// Analog Input and Relay Output
 	PORTF = 0x00;	// PortF.0(0) : Temperature Sensor
 				// PortF.1(0) : Pressure Sensor 
-				// PortF.2(1) : Non Conneciton <-- Reserved Analog In 2
-				// PortF.3(1) : Non Connection <-- Reserved Analog In 3
-				// PortF.4(1) : FND 0 Selection <-- Non Conneciton
-				// PortF.5(1) : FND 1 Selection <-- Relay 6 Out for Tank Level Alarm 2 
-				// PortF.6(1) : FND 2 Selection <-- Relay 7 Out for Heater Run/Stop 
-				// PortF.7(1) : FND 3 Selection <-- Relay 8 Out for Solenoid Valve 2
+				// PortF.2(1) : Non Conneciton 
+				// PortF.3(1) : Non Connection
+				// PortF.4(1) : FND 0 Selection
+				// PortF.5(1) : FND 1 Selection
+				// PortF.6(1) : FND 2 Selection
+				// PortF.7(1) : FND 3 Selection
 	
 	DDRG  = 0x1F;	// Buzzer
 	PORTG = 0x00;	// PortG.0(1) : Buzzer Output
@@ -230,11 +232,10 @@ void main( void )
 	OCR1A = 25000;		// 4us * 25000 =  100ms Task
 	
 	// Timer/Count 3 for PWM Output
-	TCCR3A = 0xA3;		// OC3A & OC3B(PWM Output)
+	TCCR3A = 0x83;		// OC3A
 	TCCR3B = 0x0A;		// Fast PWM Mode(10bit), 8 prescale(16MHz / 8 = 2MHz)
 	TCNT3 = 0;		
-	OCR3A = 0;		// Motor Speed 1 PWM Output
-	OCR3B = 0;		// Motor Speed 2 PWM Output
+	OCR3A = 0;		// Motor Speed PWM Output
 			
 	TIMSK = 0x12;		// Timer/Counter 1, 0 Output Compare A 
 	
