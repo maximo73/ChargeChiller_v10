@@ -196,11 +196,11 @@ void Main_Control(void)
 	if(NowTP > FanRunTemp){
 		PORTD_Bit7 = 1;							// Fan LED ON
 		PORTB_Bit7 = 1;							// Fan Relay ON
-		InReg[1] |=  0x02;
+		InReg[1] |=  0x02;                                // Comm. for Fan Status
 	}else if(NowTP < FanStopTemp){
 		PORTD_Bit7 = 0;							// Fan LED OFF
 		PORTB_Bit7 = 0;							// Fan Relay OFF
-		InReg[1] &= ~0x02;
+		InReg[1] &= ~0x02;                                // Comm. for Fan Status
 	}
 	
 	// Pump Run/Stop Check	
@@ -220,7 +220,7 @@ void Main_Control(void)
 			if((temp & 0x10) == 0x10){				// 자동운전 ON 신호가 입력되면
 				CNT_RunDelay++;
 				CNT_StopDelay = 0;
-				if(CNT_RunDelay > SystemRunDelay*10) {			// 시스템 운전 신호 지연
+				if(CNT_RunDelay > SystemRunDelay*10) {	// 시스템 운전 신호 지연
 					Ctrl |= 0x01;
 					CNT_RunDelay = 0;
 					if(PumpMode & 0x01){
@@ -238,7 +238,7 @@ void Main_Control(void)
 		PORTD_Bit4 = 1;							// Run LED ON	
 		PORTD_Bit5 = 1;							// Pump LED ON	
 		PORTB_Bit6 = 1;							// Pump Relay ON
-		InReg[1] |= 0x01;
+		InReg[1] |= 0x01;                                 // Comm. for Pump Status
 	}else {										// Auto OFF		
 		if(PumpMode & 0x01){
 			if((PWM_OUT < 20)) {					// Speed Control Mode에서 속도출력이 0이 되면 모든 상태 정지로...
@@ -246,13 +246,13 @@ void Main_Control(void)
 				PWM_OUT = 0;
 				PORTD_Bit5 = 0;					// Pump LED OFF
 				PORTB_Bit6 = 0;					// Pump Relay OFF
-				InReg[1] &= ~0x01;
+				InReg[1] &= ~0x01;                      // Comm. for Pump Status
 				PORTD_Bit4 = 0;					// Run LED OFF
 			}
 		}else {
 			PORTD_Bit5 = 0;						// Pump LED OFF
 			PORTB_Bit6 = 0;						// Pump Relay OFF
-			InReg[1] &= ~0x01;
+			InReg[1] &= ~0x01;                           // Comm. for Pump Status
 			PORTD_Bit4 = 0;						// Run LED OFF
 		}
 	}
