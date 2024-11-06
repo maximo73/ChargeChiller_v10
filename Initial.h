@@ -271,7 +271,7 @@ unsigned 	char TimeSchFlag;				// 기본 타스크주기를 위한 플래그 레
 ////#########  Variable for Display Communication ###########
 unsigned int InReg[5];		               // Address 0x0000(0) ~ 0x0005(5)
 unsigned int HoReg[17];		               // Address 0x000A(10)~ 0x001A(26)
-unsigned char TX_BUFF[20], RX_BUFF[20];
+unsigned char TX_BUFF[40], RX_BUFF[20];
 	    char Flag_Query;
 	    char Count_Query;
 	    char Count_NumByte;
@@ -299,7 +299,7 @@ void TASK_temperature(void)  					// Temperature Processing
      sum -= min;
      AD_result0 = sum/8;  
 
-	// Temperature -50(3389 kohm, 15) ~ 99(3.391kohm, 958)
+	// Temperature -50(3389 ohm, 15) ~ 99(3391 ohm, 958)
 	if(AD_result0 > 939)      fdata = 0.4813 * AD_result0 - 362.0443;
 	else if(AD_result0 > 911) fdata = 0.3582 * AD_result0 - 246.4384;
 	else if(AD_result0 > 873) fdata = 0.1966 * AD_result0 - 101.6736;
@@ -550,8 +550,6 @@ void VARIABLE_Init(void)
 	NumByte = 0;
 	Flag_ModBusTX = CLR;
 	Index_ModBusTX = 0;
-	for(i=0;i<20;i++){
-		TX_BUFF[i] = 0x00;
-		RX_BUFF[i] = 0x00;
-	}
+	for(i=0;i<40;i++) TX_BUFF[i] = 0x00;
+	for(i=0;i<20;i++) RX_BUFF[i] = 0x00;
 }
