@@ -1,7 +1,7 @@
 // ########################################################
 // 1. Project Name : JTS & WOWSYS
 // 2. Developer : Gyu-Han. Lee
-// 5. Development Period : 2024. 10. 14 ~ 2024. 11. 08
+// 5. Development Period : 2022. 04. 25 ~ 2021. 05. 20
 // 6. Microcontroller Chip : Atmel ATmega64A-16AU 64pin
 // 7. Development Tool : IAR Embedded Workbench 7.20
 // ########################################################
