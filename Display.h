@@ -109,11 +109,11 @@ void FND_2d(int number)		// address Display
 {
      unsigned int i;      
      
-	CHAR_FND[0] = ' ';						//   0.0
-	CHAR_FND[1] = ' ';						//   0.0
+	CHAR_FND[0] = ' ';						//  
+	CHAR_FND[1] = ' ';						//  
 		
 	i = number / 10;      
-     if(i == 0) CHAR_FND[1] = ' ';				//   0
+     if(i == 0) CHAR_FND[2] = ' ';				//   0
 	else CHAR_FND[2] = (unsigned char)(i + '0');
 	
 	i = number % 10;
@@ -746,7 +746,7 @@ void SetModeModify14(void)		// Select Pressure Sensor
 			break;
 		default:
 			if(TimeSchFlag & 0x04){
-				FND_2b(SensorRange[SensorMode]);
+				FND_2b(SensorRange[temp]);
 				TimeSchFlag &= ~0x04;			// 400ms Time-Flag Clear
 			}
 			break;
