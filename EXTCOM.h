@@ -326,7 +326,7 @@ void TX_Read_HoReg(unsigned int RegAddr, unsigned int NumReg)		// Read Holding R
 		return;
 	}
 	
-	if((AddrLimit < 18) && (NumReg <= 5)){				// Holding Register 주소범위를 이내 이고, 읽을 갯수가 10개 이내인 경우 정상적인 응답
+	if((AddrLimit < 18) && (NumReg <= 17)){				// Holding Register 주소범위를 이내 이고, 읽을 갯수가 10개 이내인 경우 정상적인 응답
 		// Slave ID
 		TX_BUFF[0] = (unsigned char)ComAddr;
 		// Function Code
@@ -558,7 +558,7 @@ void PACKET_CHK(void) 				// 디스플레이 보드와 통신
 	DataLen = NumByte-2;
 	NumByte = 0;
 	
-	for(i=0;i<20;i++) TX_BUFF[i] = 0x00;
+	for(i=0;i<40;i++) TX_BUFF[i] = 0x00;
 	for(i=0;i<20;i++) RX_BUFF[i] = 0x00;
 	
 	if(PacketLen >= 20) {
